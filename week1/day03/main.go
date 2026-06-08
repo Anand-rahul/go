@@ -18,12 +18,12 @@ func main() {
 	// Java: int[] arr = new int[5];
 	var arr [5]int // zero-valued: [0 0 0 0 0]
 	arr[0] = 10
-	arr[4] = 50
+	arr[2] = 50
 	fmt.Println("array:", arr, "len:", len(arr))
 
 	// Array literal — [...]int{} lets compiler count
 	primes := [5]int{2, 3, 5, 7, 11}
-	days := [...]string{"Mon", "Tue", "Wed", "Thu", "Fri"}
+	days := [...]string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
 	fmt.Println(primes, days)
 
 	// Arrays are VALUE types in Go — assignment makes a copy
@@ -39,7 +39,7 @@ func main() {
 	// Slice type: []int  (no size in brackets — that's what makes it a slice not array)
 
 	// 1. Slice literal
-	langs := []string{"Go", "Java", "Python"}
+	langs := []string{"Go", "Java", "Python", "JS"}
 	fmt.Printf("langs: %v  len=%d  cap=%d\n", langs, len(langs), cap(langs))
 
 	// 2. Slice from array — a VIEW into the array (no copy!)
@@ -117,10 +117,93 @@ func main() {
 	original := []int{1, 2, 3}
 	mutateFirst(original)
 	fmt.Println("after mutateFirst:", original) // [99 2 3]
+
+	fmt.Println("Ex1")
+	nNums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+	for _, v := range nNums {
+		if v%2 == 0 {
+			fmt.Println(v)
+		}
+	}
+
+	fmt.Println("Ex2")
+	intVal := []int{1, 2, 2, 3, 1, 4, 5, 4}
+	fmt.Println(removeDuplicates(intVal))
+
+	fmt.Println("Ex3")
+
+	testInt:= make([]int, 0, 3)
+	for i := 0; i < 7; i++ {
+		fmt.Printf("len=%d cap=%d slice=%v\n",
+			len(testInt),
+			cap(testInt),
+			testInt)
+
+		testInt = append(testInt, i)
+	}
+
+	fmt.Println("Ex4")
+	ums := []int{1, 2, 3, 4, 5}
+
+	reversed := reverseSlice(ums[1:3])
+
+	fmt.Println("Original:", ums)
+	fmt.Println("Reversed:", reversed)
+
+	fmt.Println("Ex5")
+	//fixed Capcity
+	s1 := []int{1, 2, 3}
+	s2 := s1
+
+	s2 = append(s2, 4)
+	fmt.Println("New:", s1)
+	fmt.Println("Old:", s2)
+
+	s2[0] = 99
+	fmt.Println("New:", s1)
+	fmt.Println("Old:", s2)
+
+	//Increased Capacity
+	s3 := make([]int, 3, 6)
+	s3[0] = 1
+	s3[1] = 2
+	s3[2] = 3
+	s4 := s3
+	s4 = append(s4, 4)
+	fmt.Println("New:", s3)
+	fmt.Println("Old:", s4)
+	s4[0] = 99
+	fmt.Println("New:", s3)
+	fmt.Println("Old:", s4)
+
 }
 
 func mutateFirst(s []int) {
 	s[0] = 99
+}
+
+func removeDuplicates(in []int) []int {
+	seen := make(map[int]bool)
+	result := []int{}
+
+	for _, v := range in {
+		if !seen[v] {
+			seen[v] = true
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+func reverseSlice(s []int) []int {
+	result := make([]int, len(s))
+
+	for i := 0; i < len(s); i++ {
+		result[i] = s[len(s)-1-i]
+	}
+
+	return result
 }
 
 // === EXERCISES ===
