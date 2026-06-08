@@ -141,6 +141,79 @@ outer:
 		}
 	}
 	fmt.Println()
+
+	fmt.Println("Ex1")
+	fibbo := []int{0, 1}
+	j := 2
+	for {
+			next := fibbo[j-1] + fibbo[j-2]
+
+			if next > 1000 {
+				break
+			}
+
+			fibbo = append(fibbo, next)
+			j++
+	}
+
+	for i, v := range fibbo {
+			fmt.Printf("%d : %d\n", i+1, v)
+	}
+	fmt.Println()
+
+	fmt.Println("Ex2")
+
+	grades := map[string]int{"math": 80, "english": 45, "science": 90}
+
+	for i, v := range grades {
+		if(v>50){
+			fmt.Printf("%s : %d\n", i, v)
+		}
+	}
+
+	fmt.Println()
+	fmt.Println("Ex3")
+
+	statusCode:=200
+
+	switch statusCode{
+		case 200:
+			fmt.Printf("Success\n")
+		case 201:
+			fmt.Printf("Created\n")
+		case 400:
+			fmt.Printf("Bad Request\n")
+		case 404:
+			fmt.Printf("Not Found\n")
+		case 500:
+			fmt.Printf("Internal Server Error")
+		default:
+			fmt.Printf("Unknown Status Code Encountered")
+	}
+
+	fmt.Println("Ex4")
+
+	if result, ok := divide(10, 0); ok {
+		fmt.Println("Result:", result)
+	} else {
+		fmt.Println("Division by zero")
+	}
+
+	fmt.Println("Ex5")
+	i := 99;
+	for i := 0; i < 3; i++ {
+		fmt.Println(i)
+	}
+	fmt.Println(i)
+	//99 since the loop is never executed
+
+}
+func divide(a, b int) (int, bool) {
+	if b == 0 {
+		return 0, false
+	}
+
+	return a / b, true
 }
 
 // === EXERCISES ===
