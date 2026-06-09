@@ -11,7 +11,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // === STRUCTS ===
 // Java: class Person { String name; int age; ... }
@@ -41,6 +44,8 @@ type Employee struct {
 	Role    string
 	Salary  float64
 }
+
+type PhoneBook map[string]string
 
 func main() {
 	// === MAP BASICS ===
@@ -150,7 +155,139 @@ func main() {
 	// 6. Anonymous struct — one-off use
 	point := struct{ X, Y int }{X: 3, Y: 4}
 	fmt.Println("point:", point)
+
+
+	fmt.Println("EX1")
+	q1:= "the cat sat on the mat the cat"
+
+	q1Counter:=make(map[string]int)
+	q1Arr := strings.Split(q1, " ")
+
+	for _,v := range q1Arr{
+		q1Counter[v]=q1Counter[v]+1
+	}
+	fmt.Println(q1Counter)
+
+	fmt.Println("EX2")
+
+	s1 := Student{Name: "Rahul", Grades: []int{50, 60, 70}}
+	s2 := Student{Name: "Parab", Grades: []int{70, 80, 90}}
+	s3 := Student{Name: "Rohan", Grades: []int{80, 90, 95}}
+
+	students := []Student{s1, s2, s3}
+
+	for _, student := range students {
+		fmt.Printf("%s Average: %.2f\n", student.Name, Average(student))
+	}
+
+
+	fmt.Println("EX3")
+	phonebook := make(PhoneBook)
+
+	phonebook.Add("Rahul", "6204462729")
+	phonebook.Add("Parab", "3223523232")
+	phonebook.Add("Keshav", "2438065763")
+
+	phonebook.Get("Rahul")
+
+	phonebook.Delete("Keshav")
+
+	phonebook.List()
+
+
+	fmt.Println("EX4")
+	mapA := map[string]int{
+			"Rahul": 100,
+			"Parab": 200,
+		}
+
+	mapC := mapA
+
+	mapC["Rahul"] = 999
+	mapC["Keshav"] = 300
+
+	fmt.Println("a =", mapA)
+	fmt.Println("c =", mapC)
+
+	fmt.Println("EX5")
+	slice1 := []string{"go", "java", "rust"}
+	slice2 := []string{"python", "go", "java"}
+
+	set := make(map[string]struct{})
+
+	for _, word := range slice1 {
+		set[word] = struct{}{}
+	}
+
+	fmt.Println("Common words:")
+
+	for _, word := range slice2 {
+		if _, exists := set[word]; exists {
+			fmt.Println(word)
+		}
+	}
+
+
+
 }
+
+func (p PhoneBook) Add(name string, phone string) {
+	p[name] = phone
+}
+
+func (p PhoneBook) Get(name string) {
+	if phone, exists := p[name]; exists {
+		fmt.Printf("%s -> %s\n", name, phone)
+	} else {
+		fmt.Printf("%s not found\n", name)
+	}
+}
+
+func (p PhoneBook) Delete(name string) {
+	delete(p, name)
+}
+
+func (p PhoneBook) List() {
+	fmt.Println("Phonebook Entries:")
+	for name, phone := range p {
+		fmt.Printf("%s -> %s\n", name, phone)
+	}
+}
+
+
+
+func Average(s Student) float64 {
+	if len(s.Grades) == 0 {
+		return 0
+	}
+
+	total := 0
+	for _, grade := range s.Grades {
+		total += grade
+	}
+
+	return float64(total) / float64(len(s.Grades))
+}
+
+func (s Student)Average() float64 {
+	if len(s.Grades) == 0 {
+		return 0
+	}
+
+	total := 0
+	for _, grade := range s.Grades {
+		total += grade
+	}
+
+	return float64(total) / float64(len(s.Grades))
+}
+
+type Student struct{
+	Name string
+	Grades []int
+}
+
+
 
 // No constructors in Go — use regular functions
 // Convention: NewTypeName(args) *TypeName
