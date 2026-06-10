@@ -107,6 +107,88 @@ func main() {
 	// Go:    obj := MyObj{}          — obj is a VALUE (copy-on-assign)
 	//        obj := &MyObj{}         — obj is a pointer (reference-like)
 	// This is why Go methods on pointers matter (Day 7)
+
+	fmt.Println("EX1")
+
+	new1 := 1
+	new2 := 2
+
+	fmt.Printf("Before swap %d %d\n", new1, new2)
+
+	swap(&new1, &new2)
+
+	fmt.Printf("After swap %d %d\n", new1, new2)
+
+
+	fmt.Println("EX2")
+
+	arr := []int{1,2,4,3,1,5,2,7,8}
+	var result int
+	sumSlice(arr,&result)
+	fmt.Printf("Sum of Array %d\n", result)
+
+	fmt.Println("EX3")
+	var cfg Config
+
+	first := cfg.populateConfig("A")
+	second := cfg.populateConfig("B")
+	third := cfg.populateConfig("C")
+
+	first.addNext(second).addNext(third)
+
+	fmt.Println(first.Name)
+	fmt.Println(first.next.Name)
+	fmt.Println(first.next.next.Name)
+
+	fmt.Println("EX4")
+	var s *string
+	if(s!=nil){
+    	fmt.Println(*s)
+	} else {
+		fmt.Println("pointer is nil")
+	}
+
+	fmt.Println("EX5")
+	str := "hello"
+	newptr := &str
+	fmt.Println("Before:", *newptr)
+	changePointer(newptr)
+	fmt.Println("After :", *newptr)
+	//local scope assignment so no change
+	// if address level change then new val will be passed
+
+}
+
+func changePointer(s *string) {
+	newStr := "world"
+	s = &newStr
+}
+
+
+type Config struct {
+	Name string
+	next *Config
+}
+
+func (Config) populateConfig(name string) *Config {
+	return &Config{
+		Name: name,
+	}
+}
+
+func (c *Config) addNext(conf *Config) *Config {
+	c.next = conf
+	return conf
+}
+
+func sumSlice(arr []int , res *int){
+	for _,v := range arr{
+		*res=*res+v
+	}
+}
+
+func swap(a *int, b *int){
+	*a ,*b =*b, *a
 }
 
 type Rectangle struct {
