@@ -148,6 +148,8 @@ func main() {
 		fmt.Println("pointer is nil")
 	}
 
+
+
 	fmt.Println("EX5")
 	str := "hello"
 	newptr := &str
