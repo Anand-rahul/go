@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 )
 
 // === BASIC FUNCTION ===
@@ -174,6 +175,118 @@ func main() {
 	// defer — runs at function exit (covered deeply in Day 22)
 	defer fmt.Println("this runs last (deferred)")
 	fmt.Println("this runs first")
+
+	fmt.Println("Ex1")
+	tests := []string{"25", "abc", "-5"}
+
+	for _, t := range tests {
+		age, err := parseAge(t)
+		if err != nil {
+			fmt.Printf("parseAge(%q) failed: %v\n", t, err)
+			continue
+		}
+
+		fmt.Printf("parseAge(%q) = %d\n", t, age)
+	}
+	// 2. Write: func filter(nums []int, pred func(int) bool) []int
+	//    Use it to filter even numbers from [1,2,3,4,5,6,7,8].
+
+	fmt.Println("Ex2")
+	newNums := []int{1, 2, 3, 4, 5, 6, 7, 8}
+
+	evens:= filter(newNums, func(n int) bool {
+		return n%2 == 0
+	})
+
+	fmt.Println(evens)
+
+	fmt.Println("Ex3")
+	// 3. Write: func pipeline(fns ...func(int) int) func(int) int
+	//    that applies each function in sequence to an input.
+	//    pipeline(double, square)(3) → square(double(3)) → square(6) → 36
+	p := pipeline(double, square)
+	fmt.Println(p(3))
+
+	fmt.Println(square(double(3)))
+	fmt.Println(square(6))
+
+
+	fmt.Println("Ex4")
+	// 4. Write a closure-based rate limiter:
+	//    func makeRateLimiter(limit int) func() bool
+	//    Returns true up to 'limit' times, then always false.
+	limiter := makeRateLimiter(3)
+
+	fmt.Println(limiter())
+	fmt.Println(limiter())
+	fmt.Println(limiter())
+	fmt.Println(limiter())
+	fmt.Println(limiter())
+
+	fmt.Println("Ex5")
+	// 5. Java gotcha: lambdas capture effectively-final vars. Go captures by reference.
+	//    What does this print?
+	//    funcs := make([]func(), 3)
+	//    for i := 0; i < 3; i++ { funcs[i] = func() { fmt.Println(i) } }
+	//    for _, f := range funcs { f() }
+	//    Fix it so each func prints its own i.
+	funcs := make([]func(), 3)
+
+	for i := 0; i < 3; i++ {
+		funcs[i] = func() {
+			fmt.Println(i)
+		}
+	}
+
+	for _, f := range funcs {
+		f()
+	}
+}
+
+func makeRateLimiter(limit int) func() bool {
+	count := 0
+
+	return func() bool {
+		if count >= limit {
+			return false
+		}
+
+		count++
+		return true
+	}
+}
+
+func pipeline(fns ...func(int) int) func(int) int{
+	return func(x int) int {
+		result := x
+
+		for _, fn := range fns {
+			result = fn(result)
+		}
+
+		return result
+	}
+}
+func double(x int) int {
+	return x * 2
+}
+
+func square(x int) int {
+	return x * x
+}
+func parseAge(s string) (int, error) {
+	return strconv.Atoi(s)
+}
+
+func filter(nums[] int , pred func(int) bool)[]int{
+	result:=make([]int,0)
+
+	for _,num := range nums{
+		if pred(num){
+			result=append(result,num)
+		}
+	}
+	return result
 }
 
 // === EXERCISES ===
