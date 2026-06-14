@@ -14,6 +14,7 @@ package main
 
 import (
 	"fmt"
+	"errors"
 	"math"
 )
 
@@ -167,7 +168,170 @@ func main() {
 	b := &Builder{}
 	add(add(add(b, "Go"), "is"), "fun")
 	fmt.Println("built:", b.parts)
+
+
+	fmt.Println("Ex1")
+	// 1. Create a BankAccount struct with balance float64.
+	//    Add methods: Deposit(amount float64), Withdraw(amount float64) error,
+	//    Balance() float64. Withdraw should return error if insufficient funds.
+	acc := NewBankAccount(1000)
+
+	acc.Deposit(500)
+
+	if err := acc.Withdraw(2000); err != nil {
+		fmt.Println("Withdraw failed:", err)
+	}
+
+	if err := acc.Withdraw(300); err != nil {
+		fmt.Println("Withdraw failed:", err)
+	}
+
+	fmt.Println("Current balance:", acc.Balance())
+
+	fmt.Println("Ex2")
+	// 2. Create type StringSlice []string with methods:
+	//    Contains(s string) bool, Add(s string), Remove(s string)
+
+	ss := StringSlice{"go", "java", "rust"}
+
+	fmt.Println(ss.Contains("java"))
+	fmt.Println(ss.Contains("python"))
+
+	ss.Add("python")
+	fmt.Println(ss)
+
+	ss.Remove("java")
+	fmt.Println(ss)
+
+	fmt.Println("Ex3")
+
+	var i Incrementer
+
+	counter := Counter{}
+
+	i = &counter
+
+	i.Increment()
+	i.Increment()
+
+	fmt.Println(counter.count)
+
+	fmt.Println("Ex4")
+	// 4. Create a type Kilometers float64 and Miles float64 with conversion methods.
+	km := Kilometers(10)
+	mi := km.ToMiles()
+
+	fmt.Printf("%.2f km = %.2f miles\n", km, mi)
+
+	m := Miles(10)
+	k := m.ToKilometers()
+
+	fmt.Printf("%.2f miles = %.2f km\n", m, k)
+
+	fmt.Println("Ex5")
+	// 5. What's the difference between:
+	//    c := Circle{5}; c.SetRadius(10)  — and —
+	//    c := &Circle{5}; c.SetRadius(10)
+	//    Write both and verify which one actually changes the radius.
+	//
+	circleNew := Circle{5}
+	circleNew.SetRadius(10)
+
+	fmt.Println(circleNew.Radius)
+	circleNew.SetRadiusPointer(10)
+	fmt.Println(circleNew.Radius)
+
+
+	cV := &Circle{50}
+	cV.SetRadius(10)
+
+	fmt.Println(cV.Radius)
+	cV.SetRadiusPointer(10)
+	fmt.Println(cV.Radius)
+
+
 }
+
+func (c *Circle) SetRadiusPointer(r float64) {
+	c.Radius = r
+}
+
+type Kilometers float64
+type Miles float64
+
+func (k Kilometers) ToMiles() Miles {
+	return Miles(k * 0.621371)
+}
+
+func (m Miles) ToKilometers() Kilometers {
+	return Kilometers(m * 1.60934)
+}
+
+type Incrementer interface {
+	Increment()
+}
+
+type Counter struct {
+	count int
+}
+
+func (c *Counter) Increment() {
+	c.count++
+}
+
+type StringSlice []string
+
+func (ss StringSlice) Contains(s string) bool {
+	for _, str := range ss {
+		if str == s {
+			return true
+		}
+	}
+	return false
+}
+
+func (ss *StringSlice) Add(s string) {
+	*ss = append(*ss, s)
+}
+
+func (ss *StringSlice) Remove(s string) {
+	result := make([]string, 0, len(*ss))
+	for _, str := range *ss {
+		if str != s {
+			result = append(result, str)
+		}
+	}
+	*ss = result
+}
+
+
+type BankAccount struct {
+	balance float64
+}
+
+func NewBankAccount(balance float64) *BankAccount {
+	return &BankAccount{
+		balance: balance,
+	}
+}
+
+func (b *BankAccount) Deposit(amount float64) {
+	b.balance += amount
+}
+
+func (b *BankAccount) Withdraw(amount float64) error {
+	if amount > b.balance {
+		return errors.New("insufficient funds")
+	}
+
+	b.balance -= amount
+	return nil
+}
+
+func (b *BankAccount) Balance() float64 {
+	return b.balance
+}
+
 
 // === EXERCISES ===
 // 1. Create a BankAccount struct with balance float64.
