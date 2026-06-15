@@ -14,6 +14,7 @@ package main
 
 import (
 	"fmt"
+	"errors"
 	"math"
 )
 
@@ -178,6 +179,180 @@ func main() {
 	var s2 Shape = c    // interface holds (*Circle, nil) — NOT nil!
 	fmt.Println("interface with nil pointer:", s2 == nil) // false — GOTCHA!
 	// This is a common source of bugs when returning errors
+	//
+
+	fmt.Println("Ex1")
+	// 1. Create a Logger interface with Log(msg string) and a FileLogger and
+	//    ConsoleLogger that implement it. Write a function that accepts Logger.
+
+	console := ConsoleLogger{Name: "Console1"}
+	file := FileLogger{Name: "File1"}
+
+	WriteLog(console, "Application started")
+	WriteLog(file, "Database connected")
+
+	fmt.Println("Ex2")
+	// 2. Create a PaymentProcessor interface with Charge(amount float64) error.
+	//    Implement MockProcessor (always succeeds) and FailingProcessor (always fails).
+	//    Write a Checkout function that uses PaymentProcessor.
+	//
+	mock := MockProcessor{Name: "MockGateway"}
+	failing := FailingProcessor{Name: "BrokenGateway"}
+
+	Checkout(mock, 1000)
+	Checkout(failing, 1000)
+
+	fmt.Println("Ex3")
+	// 3. The io.Writer interface is just: Write(p []byte) (n int, err error)
+	//    Create a LineCounter that implements io.Writer and counts newlines.
+	//    Use fmt.Fprintln(yourLineCounter, "hello\nworld") to test it.
+
+	var lc LineCounter
+	fmt.Fprintln(&lc, "hello\nworld")
+	fmt.Println("Newlines:", lc.Count)
+
+
+	fmt.Println("Ex4")
+	// 4. Explain the nil interface trap from the demo above.
+	//    When returning errors, why should you return nil directly
+	//    instead of returning a typed nil (*MyError)(nil)?
+	err := bad()
+
+	fmt.Printf("value: %#v\n", err)
+	fmt.Printf("type : %T\n", err)
+	fmt.Println("nil? :", err == nil)
+
+
+	fmt.Println("Ex5")
+	// 5. Write a function that takes []any and returns counts by type:
+	//    map[string]int{"string": 2, "int": 3, "float64": 1}
+	data := []any{
+			"hello",
+			42,
+			3.14,
+			"world",
+			100,
+			200,
+		}
+
+	fmt.Println(CountTypes(data))
+}
+
+func CountTypes(items []any) map[string]int {
+	counts := make(map[string]int)
+
+	for _, item := range items {
+		switch item.(type) {
+		case string:
+			counts["string"]++
+		case int:
+			counts["int"]++
+		case float64:
+			counts["float64"]++
+		default:
+			counts["unknown"]++
+		}
+	}
+
+	return counts
+}
+
+type MyError struct{}
+
+func (e *MyError) Error() string {
+	return "oops"
+}
+
+func bad() error {
+	//var err *MyError = &MyError{}
+	var err *MyError = nil
+	if err != nil{
+		op:=err.Error()
+		fmt.Println(op)
+	}
+	return err
+}
+
+
+type LineCounter struct {
+	Count int
+}
+
+func (lc *LineCounter) Write(p []byte) (int, error) {
+	for _, b := range p {
+		if b == '\n' {
+			lc.Count++
+		}
+	}
+
+	return len(p), nil
+}
+
+
+
+type PaymentProcessor interface {
+	Charge(amount float64) error
+}
+
+type MockProcessor struct {
+	Name string
+}
+
+type FailingProcessor struct {
+	Name string
+}
+
+func (m MockProcessor) Charge(amount float64) error {
+	fmt.Printf("%s charged %.2f successfully\n", m.Name, amount)
+	return nil
+}
+
+func (f FailingProcessor) Charge(amount float64) error {
+	return errors.New("payment failed")
+}
+
+func Checkout(p PaymentProcessor, amount float64) {
+	err := p.Charge(amount)
+	if err != nil {
+		fmt.Println("Checkout failed:", err)
+		return
+	}
+
+	fmt.Println("Checkout successful")
+}
+
+type Logger interface {
+	Log(message string)
+	PrintName()
+}
+
+type ConsoleLogger struct {
+	Name string
+}
+
+type FileLogger struct {
+	Name string
+}
+
+func (c ConsoleLogger) Log(message string) {
+	fmt.Printf("Logging to console: %s\n", message)
+}
+
+func (c ConsoleLogger) PrintName() {
+	fmt.Println("Console Logger:", c.Name)
+}
+
+func (f FileLogger) Log(message string) {
+	fmt.Printf("Logging to file: %s\n", message)
+}
+
+func (f FileLogger) PrintName() {
+	fmt.Println("File Logger:", f.Name)
+}
+
+func WriteLog(l Logger, msg string) {
+	l.Log(msg)
+	l.PrintName()
 }
 
 // === EXERCISES ===
