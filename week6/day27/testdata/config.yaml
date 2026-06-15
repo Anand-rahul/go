@@ -1,0 +1,8 @@
+app:
+  name: graph-harness
+  version: "1.0.0"
+  debug: false
+
+database:
+  path: ":memory:"
+  max_connections: 10

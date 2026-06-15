@@ -90,6 +90,20 @@ go run week1/day01_hello_types.go
 | 24 | `week5/day24_benchmarks.go` | Benchmarks, pprof intro, escape analysis |
 | 25 | `week5/day25_project.go` | Mini project — CLI task manager, ties everything together |
 
+## Week 6 — Reading Real Go (graph-harness)
+
+> Goal: understand every pattern you'll encounter in the graph-harness codebase.
+> Each day maps directly to files in `/home/rahul/codedump/graph-harness/graph-harness/`.
+
+| Day | File | What You Learn | Where in graph-harness |
+|-----|------|----------------|------------------------|
+| 26 | `week6/day26/main.go` | `database/sql` + SQLite — queries, transactions, prepared statements | `internal/code_core/adjacency.go`, `internal/facts/facts.go` |
+| 27 | `week6/day27/main.go` | `init()`, blank imports, plugin registry, `//go:embed`, `//go:build` | `extractors/all/all.go`, `internal/kernel/embedded.go` |
+| 28 | `week6/day28/main.go` | `atomic` deep dive, `singleflight`, `sync.Cond`, compile-time interface assertions | `internal/code_framework/dispatch.go`, `entityref_cache.go` |
+| 29 | `week6/day29/main.go` | `os/exec`, `regexp`, `crypto/sha256` + `encoding/hex`, type alias vs definition | `internal/extract/orchestrator.go`, `code_framework/types.go` |
+| 30 | `week6/day30/main.go` | Cobra CLI, YAML + TOML parsing, fuzz testing | `internal/cli/`, `internal/kernel/`, `provenance_fuzz_test.go` |
+| 31 | `week6/day31/main.go` | `net/rpc`, JSON-RPC 2.0, protobuf concepts, gRPC overview | `internal/jsonrpc/server.go`, `source_live/lsp/`, `source_live/scip/` |
+
 ---
 
 ## Java Mental Model Shifts (Read This First)
