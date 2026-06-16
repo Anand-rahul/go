@@ -14,6 +14,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"runtime"
 	"sync"
 	"time"
@@ -174,6 +175,215 @@ func main() {
 
 	// Active goroutines
 	fmt.Println("goroutines at end:", runtime.NumGoroutine())
+
+	fmt.Println("Ex1")
+	// 1. Write a parallel downloader simulation:
+	//    URLs := []string{"url1", "url2", "url3", "url4", "url5"}
+	//    For each URL, launch a goroutine that "downloads" (sleeps randomly 10-100ms)
+	//    and prints the URL when done. Use WaitGroup. Print total elapsed time.
+
+	urls := []string{"url1", "url2", "url3", "url4", "url5"}
+	var wg1 sync.WaitGroup
+	startNew := time.Now()
+
+	for _, url := range urls {
+		wg1.Add(1)
+
+		duration := time.Duration(rand.Intn(91)+10) * time.Millisecond
+
+		go downloadSimulation(url, duration, &wg1)
+	}
+
+	wg1.Wait()
+
+	fmt.Printf("Total elapsed time: %v\n", time.Since(startNew))
+
+	fmt.Println("Ex2")
+	// 2. Fix the loop variable capture bug:
+	//    for i := 0; i < 5; i++ {
+	//        go func() { fmt.Println(i) }()
+	//    }
+	//    Why does this often print "5 5 5 5 5"? Fix it two ways:
+	//    a) capture: i := i  b) pass as argument: go func(i int) { }(i)
+	//
+	var wg2 sync.WaitGroup
+	for i := 0; i < 5; i++ {
+		i := i // create a new variable
+
+		wg2.Add(1)
+		go func() {
+			defer wg2.Done()
+			fmt.Println(i)
+		}()
+	}
+
+	for i := 0; i < 5; i++ {
+		wg2.Add(1)
+
+		go func(i int) {
+			defer wg2.Done()
+			fmt.Println(i)
+		}(i)
+	}
+
+	wg2.Wait()
+
+	fmt.Println("Ex3")
+	//❯ go run -race week3/day11/main.go
+	// CPUs: 12
+	// GOMAXPROCS: 12
+
+	// Hello from goroutine-1 (goroutine)
+	// Hello from goroutine-2 (goroutine)
+	// Hello from goroutine-3 (goroutine)
+
+	// worker 4 starting
+	// worker 2 starting
+	// worker 3 starting
+	// worker 1 starting
+	// worker 3 done
+	// worker 1 done
+	// worker 4 done
+	// worker 2 done
+	// all workers done in 50.236333ms (sequential would be 140ms)
+
+	// ==================
+	// WARNING: DATA RACE
+	// Read at 0x00c00028a048 by goroutine 17:
+	//   main.unsafeCounter.func1()
+	//       /home/rahul/codedump/go/week3/day11/main.go:46 +0x7b
+
+	// Previous write at 0x00c00028a048 by goroutine 18:
+	//   main.unsafeCounter.func1()
+	//       /home/rahul/codedump/go/week3/day11/main.go:46 +0x8d
+
+	// Goroutine 17 (running) created at:
+	//   main.unsafeCounter()
+	//       /home/rahul/codedump/go/week3/day11/main.go:44 +0x78
+	//   main.main()
+	//       /home/rahul/codedump/go/week3/day11/main.go:163 +0x52a
+
+	// Goroutine 18 (finished) created at:
+	//   main.unsafeCounter()
+	//       /home/rahul/codedump/go/week3/day11/main.go:44 +0x78
+	//   main.main()
+	//       /home/rahul/codedump/go/week3/day11/main.go:163 +0x52a
+	// ==================
+	// ==================
+	// WARNING: DATA RACE
+	// Write at 0x00c00028a048 by goroutine 19:
+	//   main.unsafeCounter.func1()
+	//       /home/rahul/codedump/go/week3/day11/main.go:46 +0x8d
+
+	// Previous write at 0x00c00028a048 by goroutine 21:
+	//   main.unsafeCounter.func1()
+	//       /home/rahul/codedump/go/week3/day11/main.go:46 +0x8d
+
+	// Goroutine 19 (running) created at:
+	//   main.unsafeCounter()
+	//       /home/rahul/codedump/go/week3/day11/main.go:44 +0x78
+	//   main.main()
+	//       /home/rahul/codedump/go/week3/day11/main.go:163 +0x52a
+
+	// Goroutine 21 (finished) created at:
+	//   main.unsafeCounter()
+	//       /home/rahul/codedump/go/week3/day11/main.go:44 +0x78
+	//   main.main()
+	//       /home/rahul/codedump/go/week3/day11/main.go:163 +0x52a
+	// ==================
+	// unsafe counter (should be 1000, may not be): 866
+	// safe counter: 1000
+
+	// background goroutine started
+	// background goroutine finished
+
+	// launched 10000 goroutines, results[9999]=19998
+	// goroutines at end: 1
+	// Ex1
+	// downloading from url1 starting
+	// downloading from url4 starting
+	// downloading from url2 starting
+	// downloading from url5 starting
+	// downloading from url3 starting
+	// downloading from url2 finished
+	// downloading from url3 finished
+	// downloading from url1 finished
+	// downloading from url4 finished
+	// downloading from url5 finished
+	// Total elapsed time: 71.234754ms
+	// Ex2
+	// 0
+	// 1
+	// 2
+	// 3
+	// 1
+	// 0
+	// 4
+	// 2
+	// 3
+	// 4
+	// Found 2 data race(s)
+	// exit status 66
+
+	fmt.Println("Ex4")
+	// 4. Write a function that launches N goroutines, each incrementing a shared
+	//    counter. Use sync.Mutex to make it safe. Verify result is always N.
+
+	n := 1000
+	var wg3 sync.WaitGroup
+	var mutex sync.Mutex
+	result := newSafeCounter(n, &wg3, &mutex)
+
+	fmt.Printf("Expected: %d\n", n)
+	fmt.Printf("Actual:   %d\n", result)
+
+	fmt.Println("Ex5")
+	// 5. In Java, threads have priorities and names. In Go, goroutines are anonymous
+	//    and equal. How would you track "which goroutine did what"?
+	//    Hint: pass an ID as a parameter and collect results in a slice or channel.
+
+	var wg4 sync.WaitGroup
+
+	for i := 1; i <= 5; i++ {
+		wg4.Add(2)
+		go loggingWorker(i, &wg4)
+		go loggingWorker(i*5, &wg4)
+	}
+
+	wg4.Wait()
+}
+
+func loggingWorker(id int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	fmt.Printf("worker %d processing\n", id)
+}
+
+func newSafeCounter(n int, wg *sync.WaitGroup, mu *sync.Mutex) int {
+	var counter int
+
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			mu.Lock()
+			counter++
+			mu.Unlock()
+		}()
+	}
+
+	wg.Wait()
+
+	return counter
+}
+
+func downloadSimulation(url string, duration time.Duration, wg *sync.WaitGroup) {
+	defer wg.Done() // signal completion when function returns
+	fmt.Printf("downloading from %s starting\n", url)
+	time.Sleep(duration)
+	fmt.Printf("downloading from %s finished\n", url)
 }
 
 // === EXERCISES ===
