@@ -16,6 +16,8 @@ package main
 import (
 	"fmt"
 	"time"
+	"strings"
+	"sync"
 )
 
 // === UNBUFFERED CHANNEL ===
@@ -204,6 +206,179 @@ func main() {
 	v1, ok1 := <-ch2 // 1, true
 	v2, ok2 := <-ch2 // 0, false (zero value, channel closed)
 	fmt.Printf("v1=%d ok=%v   v2=%d ok=%v\n", v1, ok1, v2, ok2)
+
+	fmt.Println("Ex1")
+	sentences := []string{
+			"Go makes concurrency easy",
+			"Channels help goroutines communicate",
+			"Word counting is simple",
+			"Practice makes perfect",
+		}
+
+	wordChannel := make(chan int)
+	var wg sync.WaitGroup
+
+	for _, sentence := range sentences {
+		wg.Add(1)
+		go countWords(sentence, wordChannel, &wg)
+	}
+
+	go func() {
+		wg.Wait()
+		close(wordChannel)
+	}()
+
+	total := 0
+	for count := range wordChannel {
+		total += count
+	}
+
+	fmt.Printf("Total words: %d\n", total)
+
+	fmt.Println("Ex2")
+	c1 := make(chan int)
+	c2 := make(chan int)
+	c3 := make(chan int)
+
+	go func() {
+		defer close(c1)
+		c1 <- 1
+		c1 <- 2
+	}()
+
+	go func() {
+		defer close(c2)
+		c2 <- 3
+		c2 <- 4
+	}()
+
+	go func() {
+		defer close(c3)
+		c3 <- 5
+		c3 <- 6
+	}()
+
+	for v := range merge(c1, c2, c3) {
+		fmt.Println(v)
+	}
+
+	fmt.Println("Ex3")
+	sem := make(chan struct{}, 3) // max 3 concurrent workers
+
+	var newWg sync.WaitGroup
+
+	start := time.Now()
+
+	for i := 1; i <= 10; i++ {
+		newWg.Add(1)
+		go concurrentLimit(i, sem, &newWg)
+	}
+
+	newWg.Wait()
+
+	fmt.Printf("Total time: %v\n", time.Since(start))
+
+	fmt.Println("Ex4")
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered:", r)
+		}
+	}()
+
+	test := make(chan int)
+
+	close(test)
+
+	fmt.Println("Sending...")
+	//test <- 10 // panic
+
+	fmt.Println("Done")
+
+	// var ch chan int
+
+	// ch <- 10
+	//
+	fmt.Println("Ex5")
+	f := async(func() int {
+		time.Sleep(2 * time.Second)
+		return 42
+	})
+
+	fmt.Println("Doing other work...")
+
+	result := f.Get()
+
+	fmt.Println("Result:", result)
+}
+type Future struct {
+	ch chan int
+}
+
+func (f Future) Get() int {
+	return <-f.ch
+}
+
+func async(fn func() int) Future {
+	ch := make(chan int, 1)
+
+	go func() {
+		ch <- fn()
+		close(ch)
+	}()
+
+	return Future{ch: ch}
+}
+
+func countWords(sentence string, ch chan<- int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	words := strings.Fields(sentence)
+	ch <- len(words)
+}
+
+func merge(cs ...<-chan int) <-chan int {
+	out := make(chan int)
+
+	var wg sync.WaitGroup
+
+	// Forward values from one input channel to out
+	output := func(c <-chan int) {
+		defer wg.Done()
+
+		for v := range c {
+			out <- v
+		}
+	}
+
+	wg.Add(len(cs))
+
+	for _, c := range cs {
+		go output(c)
+	}
+
+	// Close out after all input channels are drained
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	return out
+}
+
+func concurrentLimit(id int, sem chan struct{}, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	// Acquire
+	sem <- struct{}{}
+
+	fmt.Printf("Worker %d started\n", id)
+
+	time.Sleep(100 * time.Millisecond)
+
+	fmt.Printf("Worker %d finished\n", id)
+
+	// Release
+	<-sem
 }
 
 // === EXERCISES ===
